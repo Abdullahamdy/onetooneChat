@@ -16,7 +16,7 @@ class CreateMessagesTable extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('user_id');
-            $table->bigInteger('receiver_id');
+            $table->bigInteger('receiver_id')->nullable();
             $table->text('message');
             $table->timestamps();
         });

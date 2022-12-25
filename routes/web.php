@@ -23,3 +23,5 @@ Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::post('sendMessage',[ChatController::class,'sendMessage'])->name('sendMessage');
+Route::get('privateMessage/{id}',[ChatController::class,'specificationMessage'])->name('privateMessage');
+Route::post('privateMessage/{id}',[ChatController::class,'sendPrivateMessage']);
