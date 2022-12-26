@@ -21,10 +21,8 @@
 
             <h1 class="h3 mb-3">Messages</h1>
             @inject('user', 'App\Models\User')
-            @inject('message', 'App\Models\Message')
             @php
                 $users = $user->all();
-                $messages = $message->all();
             @endphp
             <div class="card">
                 <div class="row g-0">
@@ -38,6 +36,7 @@
                             </div>
                         </div>
                         @forelse ($users as $user)
+                        @if($user->id != auth()->user()->id)
                             <a data-friendId="{{ $user->id }}"
                                 class="list-group-item list-group-item-action border-0 reciver_id">
                                 <div class="badge bg-success float-right">0</div>
@@ -46,10 +45,12 @@
                                         alt="Vanessa Tucker" width="40" height="40">
                                     <div class="flex-grow-1 ml-3">
                                         {{ $user->name }}
+
                                         <div class="small"><span class="fas fa-circle chat-online"></span> Online</div>
                                     </div>
                                 </div>
                             </a>
+                            @endif
                         @empty
                             <h1>No Users Found</h1>
                         @endforelse
@@ -118,6 +119,7 @@
                 },
 
                 success: function(response) {
+                    console.log('empty')
                     $('.chat-messages').html('');
                     $.each(response.fetchMessages, function(k, v) {
 
@@ -144,13 +146,7 @@
         });
 
 
-
-
-
-
-
         $('#sendMessage').on('click', function() {
-            console.log(activeUser);
             var Message = $('#chatMessage').val()
 
             $.ajax({
@@ -163,30 +159,32 @@
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
-                    Echo.private('lchat')
-                        .listen('MessageSent', (e) => {
-                            console.log(e);
+
+
+                }
+            });
+
+
+            Echo.private('privatechat.'+UserId)
+                        .listen('PrivateMessageSent', (e) => {
+                            console.log(e)
+                            activeUser=e.message.user_id;
                             $('.chat-messages').append(`
-                       <div class="chat-message-${UserId == e.message.user_id ? 'left' : 'right' } pb-4">
+                            <div class="chat-message-${UserId == e.message.user_id ? 'left' : 'right' } pb-4">
                                 <div>
-                                    <img src="{{ asset('images/${e.user.image}') }}"
+                                    <img src="{{ asset('images/${e.message.user.image}') }}"
                                         class="rounded-circle mr-1" alt="Chris Wood" width="40"
                                         height="40">
-                                    <div class="text-muted small text-nowrap mt-2">2:33 am</div>
+                                    <div class="text-muted small text-nowrap mt-2"></div>
                                 </div>
                                 <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
-                                    <div class="font-weight-bold mb-1">${UserId == e.message.user_id ? 'You' : e.user.name }</div>
+                                    <div class="font-weight-bold mb-1">${UserId == e.message.user_id ? 'You' : e.message.user.name }</div>
                                    ${e.message.message}
                                 </div>
                             </div>
                 `)
                         })
                     $('#chatMessage').val('')
-
-                }
-            });
-
-
 
 
         });

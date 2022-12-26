@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Events\MessageSent;
 use App\Models\Message;
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
+use App\Events\PrivateMessageSent;
 use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
@@ -46,7 +47,7 @@ class ChatController extends Controller
 
     public function sendPrivateMessage(Request $request,$id){
         $message =    auth()->user()->messages()->create($request->except('_token'));
-        broadcast(new MessageSent(auth()->user(), $message->load('user')));
+        broadcast(new PrivateMessageSent($message->load('user')))->toOthers();
         return response(['status'=>'message sent successfully']);
 
 

@@ -14,8 +14,10 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        for($i = 0;$i<=10;$i++){
-            User::create(['name'=>'abdullah','email'=>$i.'abdullah@gmail.com','image'=>$i.'.jpg','password'=>bcrypt(123456)]);
-        }
+
+            User::create(['name'=>'Abdullah','email'=>'abdullah@gmail.com','image'=>'1.jpg','password'=>bcrypt(123456)]);
+            User::create(['name'=>'Hbdullah','email'=>'Hamdy@gmail.com','image'=>'2.jpg','password'=>bcrypt(123456)]);
+            User::create(['name'=>'Elgayar','email'=>'Elgayar@gmail.com','image'=>'3.jpg','password'=>bcrypt(123456)]);
+
     }
 }
