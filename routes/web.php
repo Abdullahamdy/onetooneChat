@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\ChatController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\Mime\MessageConverter;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,11 +18,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::post('/send-message',[MessageController::class,'sendMessage']);
+Route::get('/messages',[MessageController::class,'fetchMessage']);
+Route::get('/messages/{FriendId}',[MessageController::class,'getUserMessage']);
+Route::get('/private',[MessageController::class,'privateChat']);
+Route::get('/get-users',[MessageController::class,'getUsers']);
+Route::get('/private-message/{user}',[MessageController::class,'getUserMessage']);
+Route::post('/private-message/{user}',[MessageController::class,'sendPrivateMessage']);
 Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-Route::post('sendMessage',[ChatController::class,'sendMessage'])->name('sendMessage');
-Route::get('privateMessage/{id}',[ChatController::class,'specificationMessage']);
-Route::post('privateMessage/{id}',[ChatController::class,'sendPrivateMessage']);

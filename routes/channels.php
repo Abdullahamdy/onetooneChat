@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('lchat',function(){
     return auth()->check();
 });
-Broadcast::channel('privatechat.{receiverid}', function ($user, $receiverid) {
+Broadcast::channel('lchat', function ($user) {
     return auth()->check();
+});
+Broadcast::channel('PrivateChat.{receiverid}', function ($user,$receiverid) {
+    return auth()->check() ;
 });

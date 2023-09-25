@@ -17,7 +17,7 @@
 
 <body>
     <div id="app">
-        <example-component :user-data="{{ auth()->user() }}"></example-component>
+        <private-chat :user="{{ auth()->user() }}"></private-chat>
     </div>
   </body>
 <script src="{{ asset('/js/app.js') }}"></script>
