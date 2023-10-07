@@ -5518,7 +5518,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ['user'],
@@ -5527,23 +5526,31 @@ __webpack_require__.r(__webpack_exports__);
       message: null,
       allmessages: [],
       users: [],
-      activeFriend: null
+      typingClock: null,
+      onlineFriends: [],
+      activeFriend: null,
+      typingFriend: {}
     };
+  },
+  computed: {
+    friends: function friends() {
+      var _this = this;
+      return this.users.filter(function (user) {
+        return user.id !== _this.user.id;
+      });
+    }
   },
   watch: {
     activeFriend: function activeFriend(val) {
       this.fetchMessage();
     }
   },
-  mounted: function mounted() {
-    var _this = this;
-    Echo["private"]('PrivateChat.' + this.user.id).listen('PrivateMessageSent', function (e) {
-      console.log(e);
-      _this.allmessages.push(e.message);
-      setTimeout(_this.scrollToEnd, 100);
-    });
-  },
   methods: {
+    onTyping: function onTyping() {
+      Echo["private"]('PrivateChat.' + this.activeFriend).whisper('typing', {
+        user: this.user
+      });
+    },
     sendMessage: function sendMessage() {
       var _this2 = this;
       if (!this.message) {
@@ -5563,10 +5570,11 @@ __webpack_require__.r(__webpack_exports__);
         _this3.allmessages = response.data.messages;
       });
     },
-    getUsers: function getUsers() {
+    fetchUsers: function fetchUsers() {
       var _this4 = this;
       axios.get('/get-users').then(function (response) {
         _this4.users = response.data.users;
+        _this4.activeFriend = _this4.friends[0].id;
       });
     },
     scrollToEnd: function scrollToEnd() {
@@ -5574,7 +5582,32 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   created: function created() {
-    this.getUsers();
+    var _this5 = this;
+    this.fetchUsers();
+    Echo.join("plchat").here(function (users) {
+      _this5.onlineFriends = users;
+    }).joining(function (user) {
+      _this5.onlineFriends.push(user);
+      console.log(user.name);
+    }).leaving(function (user) {
+      _this5.onlineFriends.splice(_this5.onlineFriends.indexOf(user), 1);
+      console.log(user.name);
+    }).error(function (error) {
+      console.error(error);
+    });
+    Echo["private"]('PrivateChat.' + this.user.id).listen('PrivateMessageSent', function (e) {
+      _this5.activeFriend = e.message.user_id;
+      _this5.allmessages.push(e.message);
+      setTimeout(_this5.scrollToEnd, 100);
+    }).listenForWhisper('typing', function (e) {
+      if (e.user.id == _this5.activeFriend) {
+        _this5.typingFriend = e.user;
+        if (_this5.typingClock) clearTimeout();
+        _this5.typingClock = setTimeout(function () {
+          _this5.typingFriend = {};
+        }, 9000);
+      }
+    });
   }
 });
 
@@ -35255,56 +35288,77 @@ var render = function () {
             [
               _vm._m(0),
               _vm._v(" "),
-              _vm._l(_vm.users, function (friend, i) {
-                return friend.id != _vm.user.id
-                  ? _c(
-                      "a",
-                      {
-                        key: friend.id,
-                        staticClass:
-                          "list-group-item list-group-item-action border-0 reciver_id",
-                      },
-                      [
-                        _c(
-                          "div",
-                          { staticClass: "badge bg-success float-right" },
-                          [_vm._v("0")]
-                        ),
-                        _vm._v(" "),
-                        _c("div", { staticClass: "d-flex align-items-start" }, [
-                          _c("img", {
-                            staticClass: "rounded-circle mr-1",
-                            attrs: {
-                              src: "Images/" + friend.image,
-                              alt: "Vanessa Tucker",
-                              width: "40",
-                              height: "40",
+              _vm._l(_vm.friends, function (friend) {
+                return _c(
+                  "a",
+                  {
+                    key: friend.id,
+                    staticClass:
+                      "list-group-item list-group-item-action border-0 reciver_id",
+                  },
+                  [
+                    _c("div", { staticClass: "badge bg-success float-right" }, [
+                      _vm._v("0"),
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "d-flex align-items-start" }, [
+                      _c("img", {
+                        staticClass: "rounded-circle mr-1",
+                        attrs: {
+                          src: "Images/" + friend.image,
+                          alt: "Vanessa Tucker",
+                          width: "40",
+                          height: "40",
+                        },
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        {
+                          staticClass: "flex-grow-1 ml-3 btn",
+                          style: {
+                            color: _vm.onlineFriends.find(function (
+                              onlineFriend
+                            ) {
+                              return onlineFriend.id == friend.id
+                            })
+                              ? "green"
+                              : "red",
+                          },
+                          on: {
+                            click: function ($event) {
+                              _vm.activeFriend = friend.id
                             },
-                          }),
-                          _vm._v(" "),
-                          _c(
-                            "div",
-                            {
-                              staticClass: "flex-grow-1 ml-3 btn",
-                              on: {
-                                click: function ($event) {
-                                  _vm.activeFriend = friend.id
-                                },
-                              },
-                            },
-                            [
-                              _vm._v(
-                                "\n                                " +
-                                  _vm._s(friend.name) +
-                                  "\n                                "
-                              ),
-                              _vm._m(1, true),
-                            ]
+                          },
+                        },
+                        [
+                          _vm._v(
+                            "\n                                " +
+                              _vm._s(friend.name) +
+                              "\n                                "
                           ),
-                        ]),
-                      ]
-                    )
-                  : _vm._e()
+                          _c("div", { staticClass: "small" }, [
+                            _c("span", {
+                              staticClass: "fas fa-circle chat-online",
+                            }),
+                            _vm._v(
+                              " " +
+                                _vm._s(
+                                  _vm.onlineFriends.find(function (
+                                    onlineFriend
+                                  ) {
+                                    return onlineFriend.id == friend.id
+                                  })
+                                    ? "Online"
+                                    : ""
+                                )
+                            ),
+                          ]),
+                        ]
+                      ),
+                    ]),
+                  ]
+                )
               }),
               _vm._v(" "),
               _c("hr", { staticClass: "d-block d-lg-none mt-1 mb-0" }),
@@ -35332,7 +35386,22 @@ var render = function () {
                       : _vm._e(),
                   ]),
                   _vm._v(" "),
-                  _vm._m(2),
+                  _c("div", { staticClass: "flex-grow-1 pl-3" }, [
+                    _vm.typingFriend.name
+                      ? _c("strong", [_vm._v(_vm._s(_vm.activeFriend.name))])
+                      : _vm._e(),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "text-muted small" }, [
+                      _vm.typingFriend.name
+                        ? _c("em", [
+                            _vm._v(
+                              _vm._s(_vm.typingFriend.name) +
+                                " is\n                                        Typing"
+                            ),
+                          ])
+                        : _vm._e(),
+                    ]),
+                  ]),
                 ]),
               ]
             ),
@@ -35414,6 +35483,7 @@ var render = function () {
                   },
                   domProps: { value: _vm.message },
                   on: {
+                    keydown: _vm.onTyping,
                     input: function ($event) {
                       if ($event.target.composing) {
                         return
@@ -35457,25 +35527,6 @@ var staticRenderFns = [
             attrs: { type: "text", placeholder: "Search..." },
           }),
         ]),
-      ]),
-    ])
-  },
-  function () {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "small" }, [
-      _c("span", { staticClass: "fas fa-circle chat-online" }),
-      _vm._v(" Online"),
-    ])
-  },
-  function () {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "flex-grow-1 pl-3" }, [
-      _c("div", { staticClass: "text-muted small" }, [
-        _c("em", [_vm._v("Typing...")]),
       ]),
     ])
   },
